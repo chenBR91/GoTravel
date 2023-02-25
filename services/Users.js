@@ -15,6 +15,10 @@ export const getOneUser = (id) => {
   return UserModel.findOne({ _id: id });
 };
 
+export const findUsername = (username) => {
+  return UserModel.findOne({username: username});
+}
+
 export const deleteUser = (id) => {
   return UserModel.findByIdAndDelete({ _id: id });
 };

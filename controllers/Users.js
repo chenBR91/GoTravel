@@ -6,66 +6,69 @@ import {
   registerUser,
   loginUser,
   updateUser,
+  findUsername,
 } from "../services/Users.js";
 import bcrypt from "bcrypt";
 import { createToken } from "../JWT.js";
 
 export const registerUserController = async (req, res) => {
   try {
-    const { username, password, restaurants } = req.body;
+    const { username, password, email } = req.body;
 
+    // add valide username exist
+    const findUsernameExist = await findUsername(username)
+    if(findUsernameExist) {
+      return res.status(202).send("username exist");
+    }
+    
     const hashPwd = await bcrypt.hash(password, 10);
     console.log(hashPwd);
 
-    console.log('restaurants', restaurants);
     const user = await registerUser({
       username: username,
       password: hashPwd,
-      restaurants: restaurants
-    })
+      EmailAddress: email,
+    });
 
-    console.log('user', user);
-    res.status(200).send({ "user registred": user });
-
-  } catch(err) {
-    console.log('err', err);
-    res.status(500).send({message: err});
+    res.status(200).send( "registred" );
+    // res.status(200).send({ "user registred": user });
+  } catch (err) {
+    console.log("err", err);
+    res.status(500).send({ message: err.message });
   }
 };
-
 
 export const loginUserController = async (req, res) => {
   try {
     const { username, password } = req.body;
+  
     const user = await loginUser({ username: username });
-    if (!user) res.send({ message: "User Doesn't Exist" });
-
-    console.log("user", user);
+    if (!user) return res.status(200).send({ message: "User Doesn't Exist" });
 
     const dbPasssword = user.password;
-    bcrypt.compare(password, dbPasssword, async(match)=>{
-      if (!match) {
-        res
-          .status(400)
-          .send({ message: "Wrong username and password combination" });
-      } else {
-        const accessToken = createToken(user);
 
-        res.cookie("access-token", accessToken, {
-          maxAge: 60 * 60 * 24,
-          httpOnly: true,
-        });
+    const isCompare = await bcrypt.compare(password, dbPasssword);
+    if (!isCompare) {
+      return res
+        .status(200)
+        .send({ message: "Wrong username and password combination" });
+    } else {
+      const accessToken = createToken(user);
 
-        res.status(200).send("LOGININ");
-      }
-    })
-     
+      res.cookie("access-token", accessToken, {
+        maxAge: 60 * 60 * 24 * 1000,
+        httpOnly: true,
+      });
+
+      res.status(200).send("LOGININ");
+    }
+    console.log("isCompare", isCompare);
+
   } catch (err) {
     console.log(err);
     res.status(500).send({ message: err });
   }
 };
-
 
 export const getAllUsersController = async (req, res) => {
   try {
@@ -111,13 +114,12 @@ export const deleteUserController = async (req, res) => {
   }
 };
 
-
 const userAllowParmerersUpdate = ["username"];
 
 export const updateUserController = async (req, res) => {
   const parametersUpdate = Object.keys(req.body);
   const isValidaionUpdate = parametersUpdate.every((currentUpdate) => {
-    return userAllowParmerersUpdate.includes(currentUpdate)
+    return userAllowParmerersUpdate.includes(currentUpdate);
   });
 
   if (!isValidaionUpdate) {
@@ -125,14 +127,14 @@ export const updateUserController = async (req, res) => {
   }
 
   try {
-    const {id} = req.params;
+    const { id } = req.params;
     const user = await getOneUser(id);
 
-    if(!user) {
-        res.status(400).send({ message: "Invalid get user" });
+    if (!user) {
+      res.status(400).send({ message: "Invalid get user" });
     }
 
-    parametersUpdate.forEach((update) => (user[update] = req.body[update]))
+    parametersUpdate.forEach((update) => (user[update] = req.body[update]));
     await updateUser(user);
     res.status(200).send(user);
   } catch (err) {

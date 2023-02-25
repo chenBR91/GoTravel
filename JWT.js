@@ -9,6 +9,7 @@ export const createToken = (user) => {
     { username: user.username, id: user._id },
     JWT_SECERT
   );
+
   return accessToken;
 };
 
