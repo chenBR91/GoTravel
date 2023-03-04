@@ -1,0 +1,5 @@
+.box {
+    overflow: "auto";
+    background: rgb(52, 157, 210);
+    height: 100%;
+}

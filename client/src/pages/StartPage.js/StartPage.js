@@ -1,11 +1,11 @@
-import React from "react";
-import logo from "../../logo.svg";
-import Header from "../Header/Header";
+import React, { useContext } from "react";
+import UsersContext from "../../UsersContext";
 
 function StartPage() {
+  const {user} = useContext(UsersContext);
   return (
     <div>
-      home
+      {user.username}
     </div>
   );
 }

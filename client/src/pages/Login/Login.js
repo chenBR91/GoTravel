@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import "./Login.css";
 import axios from "axios"
 import { Link } from "react-router-dom";
+import UsersContext from "../../UsersContext";
 
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
@@ -22,6 +23,9 @@ function Login() {
   const [password, setPassword] = useState("");
   const [usernameValide, setUsernameValide] = useState("");
   const [passwordValide, setPasswordValide] = useState("");
+
+  const {SetUser} = useContext(UsersContext);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,7 +35,6 @@ function Login() {
 
   const handleSubmitSend = async (evt) => {
     evt.preventDefault();
-    console.log("set parameter");
     setPassword(password);
     setUsername(username);
 
@@ -39,9 +42,14 @@ function Login() {
         const login = await axios.post("http://localhost:8000/api/users/login", {username, password})   
         console.log('login', login); 
         inputValidation(login.data);
-        if(login.data === 'LOGININ')
-            navigate("/")
-    
+        if(login.data.message === 'LOGININ')
+          console.log(login.data.user);    
+          SetUser(login.data.user)
+
+          window.localStorage.setItem("access-token", login.data.accessToken);
+          const token = window.localStorage.getItem("access-token");
+          navigate("/")
+
     } catch(err) {
         console.log('err', err);
     }
